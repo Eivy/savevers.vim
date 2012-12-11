@@ -257,14 +257,14 @@ function! s:pre()
    " search for the first non-existent patchfile
    let l:base = expand("<afile>:p")
    let l:dir = s:first_versdir(l:base)
-   let l:i = 1
-   let s:patchnum = 1
-   while l:i <= s:max_ver
+   let l:i = s:max_ver
+   let s:patchnum = s:max_ver
+   while l:i >= 1
       let s:patchnum = l:i
-      if !filereadable(s:get_version(l:base,l:i,l:dir))
+      if filereadable(s:get_version(l:base,l:i-1,l:dir))
          break
       endif
-      let l:i = l:i + 1
+      let l:i = l:i - 1
    endwhile
    " set our new patchmode
    let s:patchmode = &patchmode
@@ -284,13 +284,10 @@ function! s:post()
    if l:src != l:dst
       if filereadable(l:dst)
          let l:tmp = l:dst . ".SaVeVeRs." . s:patchnum
+         call s:shift_ver(l:base)
          if filereadable(l:tmp)
             echohl ErrorMsg
             echo ":savevers.vim - Old temp file?  Something went wrong..."
-            echohl None
-         elseif rename(l:dst,l:tmp)
-            echohl ErrorMsg
-            echo ":savevers.vim - Can't create temp file?  Something went wrong..."
             echohl None
          elseif !filereadable(l:src)
             " Hmm, src no longer exists? Maybe src and dst are the same?
@@ -304,6 +301,22 @@ function! s:post()
    endif
    unlet! s:patchmode s:patchnum
 endfunction
+
+
+fun! s:shift_ver(base)
+   let l:lost_ver = 1
+   for n in range(1, s:patchnum-1)
+      if !filereadable(s:get_version(a:base,n,s:first_versdir(a:base)))
+         let l:lost_ver = n
+      endif
+   endfor
+   while l:lost_ver < s:patchnum
+      call rename(s:get_version(a:base,l:lost_ver+1,s:first_versdir(a:base)),s:get_version(a:base,l:lost_ver,s:first_versdir(a:base)))
+      let l:lost_ver = l:lost_ver + 1
+   endw
+   return 0
+   unlet! l:lost_ver
+endf
 
 
 function! s:purge(...)
