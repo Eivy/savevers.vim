@@ -237,9 +237,9 @@ endfunction
 
 function! s:get_version(base,i,dir)
    if a:dir =~ "^$" || a:dir =~ "^\\\./$"
-      return fnamemodify(a:base,":p") . s:get_ext(a:i)
+      return  fnamemodify(a:base,":p:h:t") . "_" . fnamemodify(a:base,":p") . s:get_ext(a:i)
    else
-      return a:dir . fnamemodify(a:base,":t") . s:get_ext(a:i)
+      return a:dir . fnamemodify(a:base,":p:h:t") . "_" . fnamemodify(a:base,":t") . s:get_ext(a:i)
    endif
 endfunction
 
